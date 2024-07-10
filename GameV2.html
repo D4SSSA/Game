@@ -396,11 +396,11 @@
                 let enemy;
                 if (enemyType === 1) {
                     enemy = this.enemies.create(x, y, 'enemy_down'); // Default to down direction
-                    enemy.setData('type', 'normal');
+                    enemy.setData('type', 'enemy');
                     enemy.setVelocity(this.enemySpeed, this.enemySpeed);
                 } else if (enemyType === 2) {
                     enemy = this.enemies.create(x, y, 'fastEnemy_down'); // Default to down direction
-                    enemy.setData('type', 'fast');
+                    enemy.setData('type', 'fastEnemy');
                     enemy.setVelocity(this.enemySpeed * 2, this.enemySpeed * 2); // Double the speed for fast enemies
                 } else if (enemyType === 3) {
                     enemy = this.enemies.create(x, y, 'shootingEnemy_down'); // Default to down direction
