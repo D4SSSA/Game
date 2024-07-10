@@ -256,16 +256,16 @@
         this.player.setVelocityY(-200);
         this.lastDirection = 'up_left';
         this.player.setTexture('player_up_left');
-    } else if (this.cursors.right.isDown && this.cursors.up.isDown) {
-        this.player.setVelocityX(200);
-        this.player.setVelocityY(-200);
-        this.lastDirection = 'up_right';
-        this.player.setTexture('player_up_right');
     } else if (this.cursors.left.isDown && this.cursors.down.isDown) {
         this.player.setVelocityX(-200);
         this.player.setVelocityY(200);
         this.lastDirection = 'down_left';
         this.player.setTexture('player_down_left');
+    } else if (this.cursors.right.isDown && this.cursors.up.isDown) {
+        this.player.setVelocityX(200);
+        this.player.setVelocityY(-200);
+        this.lastDirection = 'up_right';
+        this.player.setTexture('player_up_right');
     } else if (this.cursors.right.isDown && this.cursors.down.isDown) {
         this.player.setVelocityX(200);
         this.player.setVelocityY(200);
@@ -378,7 +378,7 @@ shootBullet() {
 }
 
 
-            spawnEnemy() {
+spawnEnemy() {
     let x = Phaser.Math.Between(0, 1250);
     let y = Phaser.Math.Between(0, 720);
 
@@ -393,24 +393,26 @@ shootBullet() {
 
     let enemy;
     if (enemyType === 1) {
-        enemy = this.enemies.create(x, y, 'enemy_down');
+        enemy = this.enemies.create(x, y, 'enemy_down'); // Default to down direction
         enemy.setData('type', 'normal');
+        enemy.setVelocity(this.enemySpeed, this.enemySpeed);
     } else if (enemyType === 2) {
-        enemy = this.enemies.create(x, y, 'fastEnemy_down');
+        enemy = this.enemies.create(x, y, 'fastEnemy_down'); // Default to down direction
         enemy.setData('type', 'fast');
         enemy.setVelocity(this.enemySpeed * 2, this.enemySpeed * 2); // Double the speed for fast enemies
     } else if (enemyType === 3) {
-        enemy = this.enemies.create(x, y, 'shootingEnemy_down');
+        enemy = this.enemies.create(x, y, 'shootingEnemy_down'); // Default to down direction
         enemy.setData('type', 'shooting');
         enemy.setData('lastFired', this.time.now); // Set initial last fired to now
+        enemy.setVelocity(this.enemySpeed, this.enemySpeed);
     }
 
     enemy.setCollideWorldBounds(true);
     enemy.setActive(true);
     enemy.setVisible(true);
     enemy.body.enable = true;
-    enemy.setVelocity(this.enemySpeed, this.enemySpeed);
 }
+
 
 
             spawnItem() {
