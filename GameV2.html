@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <title>Spiel</title>
+</head>
+
+<body>
+    <script>
+        class StartScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'StartScene' });
+            }
+
+            create() {
+                // Titel des Spiels
+                this.add.text(400, 200, 'Spiel', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+
+                // Start-Button
+                let startButton = this.add.text(400, 300, 'Start', { fontSize: '32px', fill: '#FFF' })
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                startButton.on('pointerdown', () => {
+                    this.scene.start('MainScene');
+                });
+
+                // Einstellungen-Button
+                let settingsButton = this.add.text(400, 350, 'Einstellungen', { fontSize: '32px', fill: '#FFF' })
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                settingsButton.on('pointerdown', () => {
+                    this.scene.start('SettingsScene');
+                });
+            }
+        }
+
+        class SettingsScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'SettingsScene' });
+            }
+
+            preload() {
+                // Hintergrundbilder laden
+                this.load.image('background1', 'https://i.ibb.co/yhqG2gt/background1.png');
+                this.load.image('background2', 'https://i.ibb.co/XtSjTxT/background2.png');
+                this.load.image('background3', 'https://i.ibb.co/qYGHFNc/background3.png');
+            }
+
+            create() {
+                // Titel der Einstellungen
+                this.add.text(400, 100, 'Einstellungen', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+
+                // Hintergrundoptionen
+                this.add.text(400, 200, 'Wähle den Hintergrund:', { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+
+                let background1Button = this.add.image(250, 300, 'background1')
+                    .setDisplaySize(100, 100)
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                let background2Button = this.add.image(400, 300, 'background2')
+                    .setDisplaySize(100, 100)
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                let background3Button = this.add.image(550, 300, 'background3')
+                    .setDisplaySize(100, 100)
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                background1Button.on('pointerdown', () => {
+                    this.setBackground('background1');
+                });
+
+                background2Button.on('pointerdown', () => {
+                    this.setBackground('background2');
+                });
+
+                background3Button.on('pointerdown', () => {
+                    this.setBackground('background3');
+                });
+
+                // Zurück-Button
+                let backButton = this.add.text(400, 400, 'Zurück', { fontSize: '32px', fill: '#FFF' })
+                    .setOrigin(0.5)
+                    .setInteractive();
+
+                backButton.on('pointerdown', () => {
+                    this.scene.start('StartScene');
+                });
+            }
+
+            setBackground(backgroundKey) {
+                localStorage.setItem('selectedBackground', backgroundKey);
+                console.log(`Hintergrund gesetzt: ${backgroundKey}`); // Debugging line
+            }
+        }
+
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                this.player = null;
+                this.cursors = null;
+                this.bullets = null;
+                this.lastFired = 0;
+                this.fireDelay = 250;
+                this.enemies = null;
+                this.enemySpeed = 50;
+                this.score = 0;
+                this.scoreText = null;
+                this.lastDirection = 'down';
+                this.startTime = 0;
+                this.timerText = null;
+                this.spawnDelay = 5000; // Initial spawn delay
+                this.enemySpawnEvent = null;
+            }
+
+            preload() {
+                // Load all necessary assets
+                this.load.image('background1', 'https://raw.githubusercontent.com/D4SSSA/bs-project/f43b5fc3945007eebe188cead529d6b7474a6028/background1.png');
+                this.load.image('background2', 'https://raw.githubusercontent.com/D4SSSA/bs-project/f43b5fc3945007eebe188cead529d6b7474a6028/background2.png');
+                this.load.image('background3', 'https://raw.githubusercontent.com/D4SSSA/bs-project/f43b5fc3945007eebe188cead529d6b7474a6028/background3.png');
+                this.load.image('player_up', 'assets/player_up.png');
+                this.load.image('player_down', 'assets/player_down.png');
+                this.load.image('player_left', 'assets/player_left.png');
+                this.load.image('player_right', 'assets/player_right.png');
+                this.load.image('bullet', 'assets/bullet.png');
+                this.load.image('enemy', 'assets/enemy.png');
+                this.load.image('fastEnemy', 'assets/fast_enemy.png');
+                this.load.image('shootingEnemy', 'assets/shooting_enemy.png');
+                this.load.image('enemyBullet', 'assets/bullet.png');
+            }
+
+            create() {
+                // Setze die Startzeit und den Score zurück
+                this.startTime = this.time.now;
+                this.score = 0;
+
+                // Setze den Hintergrund
+                let selectedBackground = localStorage.getItem('selectedBackground') || 'background1';
+                console.log(`Geladener Hintergrund: ${selectedBackground}`); // Debugging line
+                this.add.image(400, 300, selectedBackground);
+
+                // Initialize player
+                this.player = this.physics.add.sprite(400, 300, 'player_down');
+                this.player.setCollideWorldBounds(true);
+
+                // Create keyboard controls
+                this.cursors = this.input.keyboard.createCursorKeys();
+
+                // Create bullets group
+                this.playerBullets = this.physics.add.group({
+                    defaultKey: 'bullet',
+                    maxSize: 10
+                });
+
+                this.enemyBullets = this.physics.add.group({
+                    defaultKey: 'enemyBullet',
+                    maxSize: 20
+                });
+
+                // Create enemies group
+                this.enemies = this.physics.add.group();
+
+                // Event for enemy spawning
+                this.enemySpawnEvent = this.time.addEvent({
+                    delay: this.spawnDelay,
+                    callback: this.spawnEnemy,
+                    callbackScope: this,
+                    loop: true
+                });
+
+                // Colliders
+                this.physics.add.collider(this.playerBullets, this.enemies, this.hitEnemy, null, this);
+                this.physics.add.collider(this.player, this.enemies, this.playerHit, null, this);
+                this.physics.add.collider(this.player, this.enemyBullets, this.playerHitByBullet, null, this);
+                this.physics.add.collider(this.playerBullets, this.enemyBullets, this.hitEnemyBullet, null, this);
+
+                // Score display
+                this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+                // Timer display
+                this.timerText = this.add.text(16, 50, 'Time: 0:00', { fontSize: '32px', fill: '#FFF' });
+            }
+
+            update(time, delta) {
+                this.player.setVelocity(0);
+
+                // Update player movement and direction
+                if (this.cursors.left.isDown) {
+                    this.player.setVelocityX(-200);
+                    this.lastDirection = 'left';
+                    this.player.setTexture('player_left');
+                } else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(200);
+                    this.lastDirection = 'right';
+                    this.player.setTexture('player_right');
+                }
+
+                if (this.cursors.up.isDown) {
+                    this.player.setVelocityY(-200);
+                    this.lastDirection = 'up';
+                    this.player.setTexture('player_up');
+                } else if (this.cursors.down.isDown) {
+                    this.player.setVelocityY(200);
+                    this.lastDirection = 'down';
+                    this.player.setTexture('player_down');
+                }
+
+                // Handle shooting with delay
+                if (this.cursors.space.isDown && time > this.lastFired + this.fireDelay) {
+                    this.lastFired = time;
+                    this.shootBullet();
+                }
+
+                // Remove bullets that are out of bounds
+                this.playerBullets.children.each(function (b) {
+                    if (b.active && (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)) {
+                        b.setActive(false);
+                        b.setVisible(false);
+                        b.body.enable = false;
+                    }
+                });
+
+                this.enemyBullets.children.each(function (b) {
+                    if (b.active && (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)) {
+                        b.setActive(false);
+                        b.setVisible(false);
+                        b.body.enable = false;
+                    }
+                });
+
+                // Update enemies movement towards player
+                this.enemies.children.iterate(function (enemy) {
+                    if (enemy.active) {
+                        this.physics.moveToObject(enemy, this.player, this.enemySpeed);
+                        if (enemy.getData('type') === 'shooting' && time > enemy.getData('lastFired') + 2000) {
+                            enemy.setData('lastFired', time);
+                            this.shootFromEnemy(enemy);
+                        }
+                    }
+                }, this);
+
+                // Update timer display
+                const elapsed = Math.floor((time - this.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                this.timerText.setText(`Time: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+
+                // Update spawn delay based on score
+                this.updateSpawnDelay();
+            }
+
+            shootBullet() {
+                let bullet = this.playerBullets.get(this.player.x, this.player.y);
+                if (bullet) {
+                    bullet.setActive(true);
+                    bullet.setVisible(true);
+                    bullet.body.enable = true; // Enable physics body
+                    // Setzt die Geschwindigkeit basierend auf der letzten Blickrichtung
+                    if (this.lastDirection === 'left') {
+                        bullet.setVelocityX(-300);
+                        bullet.setVelocityY(0);
+                    } else if (this.lastDirection === 'right') {
+                        bullet.setVelocityX(300);
+                        bullet.setVelocityY(0);
+                    } else if (this.lastDirection === 'up') {
+                        bullet.setVelocityY(-300);
+                        bullet.setVelocityX(0);
+                    } else if (this.lastDirection === 'down') {
+                        bullet.setVelocityY(300);
+                        bullet.setVelocityX(0);
+                    }
+                }
+            }
+
+            spawnEnemy() {
+                let x = Phaser.Math.Between(0, 800);
+                let y = Phaser.Math.Between(0, 600);
+
+                // Adjust spawn position if too close to the player
+                if (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 100) {
+                    x += (x > this.player.x) ? 100 : -100;
+                    y += (y > this.player.y) ? 100 : -100;
+                }
+
+                let enemyType = Phaser.Math.Between(1, 3);
+                console.log("Spawning enemy type:", enemyType); // Debugging line
+
+                let enemy;
+                if (enemyType === 1) {
+                    enemy = this.enemies.create(x, y, 'enemy');
+                    enemy.setData('type', 'normal');
+                } else if (enemyType === 2) {
+                    enemy = this.enemies.create(x, y, 'fastEnemy');
+                    enemy.setData('type', 'fast');
+                } else if (enemyType === 3) {
+                    enemy = this.enemies.create(x, y, 'shootingEnemy');
+                    enemy.setData('type', 'shooting');
+                    enemy.setData('lastFired', this.time.now); // Set initial last fired to now
+                }
+
+                enemy.setCollideWorldBounds(true);
+                enemy.setActive(true);
+                enemy.setVisible(true);
+                enemy.body.enable = true;
+                enemy.setVelocity(this.enemySpeed, this.enemySpeed);
+            }
+
+            shootFromEnemy(enemy) {
+                let bullet = this.enemyBullets.get(enemy.x, enemy.y);
+                if (bullet) {
+                    bullet.setActive(true);
+                    bullet.setVisible(true);
+                    bullet.body.enable = true;  // Enable physics body
+
+                    // Setze die Flugrichtung des Geschosses
+                    var angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.player.x, this.player.y);
+                    this.physics.velocityFromRotation(angle, 300, bullet.body.velocity);
+
+                    // Event-Handler, der ausgelöst wird, wenn das Geschoss die Weltgrenzen berührt
+                    bullet.body.onWorldBounds = true;
+                    bullet.body.world.on('worldbounds', (body) => {
+                        // Prüfe, ob der Körper, der die Weltgrenzen berührt, zu einem aktiven Geschoss gehört
+                        if (body.gameObject === bullet) {
+                            bullet.setActive(false).setVisible(false);
+                            bullet.body.enable = false;
+                        }
+                    });
+                }
+            }
+
+            hitEnemy(bullet, enemy) {
+                if (bullet.active && enemy.active) {
+                    bullet.setActive(false).setVisible(false);
+                    bullet.body.enable = false;
+                    enemy.setActive(false).setVisible(false);
+                    enemy.body.enable = false;
+
+                    // Punktzahl um 100 erhöhen und Text aktualisieren
+                    this.score += 100;
+                    this.scoreText.setText('Score: ' + this.score);
+                }
+            }
+
+            hitEnemyBullet(playerBullet, enemyBullet) {
+                if (playerBullet.active && enemyBullet.active) {
+                    playerBullet.setActive(false).setVisible(false);
+                    playerBullet.body.enable = false;
+                    enemyBullet.setActive(false).setVisible(false);
+                    enemyBullet.body.enable = false;
+
+                    // Punktzahl um 50 erhöhen und Text aktualisieren
+                    this.score += 50;
+                    this.scoreText.setText('Score: ' + this.score);
+                }
+            }
+
+            playerHit(player, enemy) {
+                if (enemy.active) { // Überprüfen, ob der Feind aktiv ist
+                    const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
+                    const finalMinutes = Math.floor(finalTime / 60);
+                    const finalSeconds = finalTime % 60;
+                    const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+                    this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                }
+            }
+
+            playerHitByBullet(player, bullet) {
+                if (bullet.active) { // Überprüfen, ob das Geschoss aktiv ist
+                    bullet.setActive(false).setVisible(false);  // Deaktiviere das Geschoss
+                    bullet.body.enable = false;
+
+                    // Berechne die finale Zeit und formatiere sie
+                    const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
+                    const finalMinutes = Math.floor(finalTime / 60);
+                    const finalSeconds = finalTime % 60;
+                    const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+
+                    // Starte die GameOverScene mit den korrekten Daten
+                    this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                }
+            }
+
+            updateSpawnDelay() {
+                let newDelay;
+                if (this.score < 1000) {
+                    newDelay = 5000;
+                } else if (this.score < 2000) {
+                    newDelay = 4000;
+                } else if (this.score < 3000) {
+                    newDelay = 3000;
+                } else if (this.score < 4000) {
+                    newDelay = 2000;
+                } else {
+                    newDelay = 1000;
+                }
+
+                if (newDelay !== this.spawnDelay) {
+                    this.spawnDelay = newDelay;
+                    console.log(`Spawn delay updated to: ${this.spawnDelay}`); // Debugging line
+                    this.enemySpawnEvent.reset({ delay: this.spawnDelay, callback: this.spawnEnemy, callbackScope: this, loop: true });
+                }
+            }
+        }
+
+        class GameOverScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'GameOverScene' });
+                this.finalScore = 0;
+                this.finalTime = '0:00';
+            }
+
+            init(data) {
+                this.finalScore = data.score;
+                this.finalTime = data.time;
+            }
+
+            create() {
+                this.add.text(400, 300, 'Game Over', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(400, 400, 'Final Score: ' + this.finalScore, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(400, 450, `Time: ${this.finalTime}`, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+
+                let restartButton = this.add.text(400, 500, 'Restart', { fontSize: '32px', fill: '#FFF' })
+                    .setOrigin(0.5)
+                    .setInteractive();
+                restartButton.on('pointerdown', () => {
+                    this.scene.start('StartScene');
+                });
+            }
+        }
+
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    debug: false
+                }
+            },
+            scene: [StartScene, MainScene, GameOverScene, SettingsScene]
+        };
+
+        const game = new Phaser.Game(config);
+    </script>
+</body>
+
+</html>
