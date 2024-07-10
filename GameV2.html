@@ -118,6 +118,8 @@
                 this.timerText = null;
                 this.spawnDelay = 5000; // Initial spawn delay
                 this.enemySpawnEvent = null;
+                this.itemSpawnEvent = null;
+                this.items = null;
             }
 
             preload() {
@@ -134,6 +136,7 @@
                 this.load.image('fastEnemy', 'assets/fast_enemy.png');
                 this.load.image('shootingEnemy', 'assets/shooting_enemy.png');
                 this.load.image('enemyBullet', 'assets/bullet.png');
+                this.load.image('item', 'assets/item.png'); // Load item asset
             }
 
             create() {
@@ -167,10 +170,21 @@
                 // Create enemies group
                 this.enemies = this.physics.add.group();
 
+                // Create items group
+                this.items = this.physics.add.group();
+
                 // Event for enemy spawning
                 this.enemySpawnEvent = this.time.addEvent({
                     delay: this.spawnDelay,
                     callback: this.spawnEnemy,
+                    callbackScope: this,
+                    loop: true
+                });
+
+                // Event for item spawning
+                this.itemSpawnEvent = this.time.addEvent({
+                    delay: 60000, // 1 minute delay
+                    callback: this.spawnItem,
                     callbackScope: this,
                     loop: true
                 });
@@ -180,6 +194,7 @@
                 this.physics.add.collider(this.player, this.enemies, this.playerHit, null, this);
                 this.physics.add.collider(this.player, this.enemyBullets, this.playerHitByBullet, null, this);
                 this.physics.add.collider(this.playerBullets, this.enemyBullets, this.hitEnemyBullet, null, this);
+                this.physics.add.collider(this.player, this.items, this.collectItem, null, this);
 
                 // Score display
                 this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
@@ -311,6 +326,25 @@
                 enemy.setVelocity(this.enemySpeed, this.enemySpeed);
             }
 
+            spawnItem() {
+                if (this.score >= 2000) {
+                    let x = Phaser.Math.Between(0, 1250);
+                    let y = Phaser.Math.Between(0, 720);
+
+                    // Bearbeiten Falls zu nah am Spieler
+                    if (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 100) {
+                        x += (x > this.player.x) ? 100 : -100;
+                        y += (y > this.player.y) ? 100 : -100;
+                    }
+
+                    let item = this.items.create(x, y, 'item');
+                    item.setCollideWorldBounds(true);
+                    item.setActive(true);
+                    item.setVisible(true);
+                    item.body.enable = true;
+                }
+            }
+
             shootFromEnemy(enemy) {
                 let bullet = this.enemyBullets.get(enemy.x, enemy.y);
                 if (bullet) {
@@ -332,6 +366,22 @@
                         }
                     });
                 }
+            }
+
+            collectItem(player, item) {
+                item.setActive(false).setVisible(false);
+                item.body.enable = false;
+
+                let enemyCount = this.enemies.countActive(true);
+                this.enemies.children.each((enemy) => {
+                    if (enemy.active) {
+                        enemy.setActive(false).setVisible(false);
+                        enemy.body.enable = false;
+                    }
+                });
+
+                this.score += enemyCount * 100; // Add points for all enemies destroyed
+                this.scoreText.setText('Score: ' + this.score);
             }
 
             hitEnemy(bullet, enemy) {
