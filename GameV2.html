@@ -17,10 +17,10 @@
 
             create() {
                 // Titel des Spiels
-                this.add.text(400, 200, 'Spiel', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 360, 'Spiel', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
 
                 // Start-Button
-                let startButton = this.add.text(400, 300, 'Start', { fontSize: '32px', fill: '#FFF' })
+                let startButton = this.add.text(625, 460, 'Start', { fontSize: '32px', fill: '#FFF' })
                     .setOrigin(0.5)
                     .setInteractive();
 
@@ -29,7 +29,7 @@
                 });
 
                 // Einstellungen-Button
-                let settingsButton = this.add.text(400, 350, 'Einstellungen', { fontSize: '32px', fill: '#FFF' })
+                let settingsButton = this.add.text(625, 510, 'Einstellungen', { fontSize: '32px', fill: '#FFF' })
                     .setOrigin(0.5)
                     .setInteractive();
 
@@ -46,29 +46,29 @@
 
             preload() {
                 // Hintergrundbilder laden
-                this.load.image('background1', 'https://i.ibb.co/yhqG2gt/background1.png');
-                this.load.image('background2', 'https://i.ibb.co/XtSjTxT/background2.png');
-                this.load.image('background3', 'https://i.ibb.co/qYGHFNc/background3.png');
+                this.load.image('background1', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background1.png');
+                this.load.image('background2', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background2.png');
+                this.load.image('background3', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background3.png');
             }
 
             create() {
                 // Titel der Einstellungen
-                this.add.text(400, 100, 'Einstellungen', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 100, 'Einstellungen', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
 
                 // Hintergrundoptionen
-                this.add.text(400, 200, 'Wähle den Hintergrund:', { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 200, 'Wähle den Hintergrund:', { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
 
-                let background1Button = this.add.image(250, 300, 'background1')
+                let background1Button = this.add.image(450, 300, 'background1')
                     .setDisplaySize(100, 100)
                     .setOrigin(0.5)
                     .setInteractive();
 
-                let background2Button = this.add.image(400, 300, 'background2')
+                let background2Button = this.add.image(625, 300, 'background2')
                     .setDisplaySize(100, 100)
                     .setOrigin(0.5)
                     .setInteractive();
 
-                let background3Button = this.add.image(550, 300, 'background3')
+                let background3Button = this.add.image(800, 300, 'background3')
                     .setDisplaySize(100, 100)
                     .setOrigin(0.5)
                     .setInteractive();
@@ -86,7 +86,7 @@
                 });
 
                 // Zurück-Button
-                let backButton = this.add.text(400, 400, 'Zurück', { fontSize: '32px', fill: '#FFF' })
+                let backButton = this.add.text(625, 400, 'Zurück', { fontSize: '32px', fill: '#FFF' })
                     .setOrigin(0.5)
                     .setInteractive();
 
@@ -122,9 +122,9 @@
 
             preload() {
                 // Load all necessary assets
-                this.load.image('background1', 'https://github.com/D4SSSA/Game/blob/91037102f783f6f5892733f4fdbaf86b9e8a4c54/assets/background1.png');
-                this.load.image('background2', 'https://github.com/D4SSSA/Game/blob/91037102f783f6f5892733f4fdbaf86b9e8a4c54/assets/background2.png');
-                this.load.image('background3', 'https://github.com/D4SSSA/Game/blob/91037102f783f6f5892733f4fdbaf86b9e8a4c54/assets/background3.png');
+                this.load.image('background1', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background1.png');
+                this.load.image('background2', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background2.png');
+                this.load.image('background3', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background3.png');
                 this.load.image('player_up', 'assets/player_up.png');
                 this.load.image('player_down', 'assets/player_down.png');
                 this.load.image('player_left', 'assets/player_left.png');
@@ -144,10 +144,10 @@
                 // Setze den Hintergrund
                 let selectedBackground = localStorage.getItem('selectedBackground') || 'background1';
                 console.log(`Geladener Hintergrund: ${selectedBackground}`); // Debugging line
-                this.add.image(400, 300, selectedBackground);
+                this.add.image(625, 360, selectedBackground);
 
                 // Initialize player
-                this.player = this.physics.add.sprite(400, 300, 'player_down');
+                this.player = this.physics.add.sprite(625, 360, 'player_down');
                 this.player.setCollideWorldBounds(true);
 
                 // Create keyboard controls
@@ -219,7 +219,7 @@
 
                 // Remove bullets that are out of bounds
                 this.playerBullets.children.each(function (b) {
-                    if (b.active && (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)) {
+                    if (b.active && (b.y < 0 || b.y > 720 || b.x < 0 || b.x > 1250)) {
                         b.setActive(false);
                         b.setVisible(false);
                         b.body.enable = false;
@@ -227,7 +227,7 @@
                 });
 
                 this.enemyBullets.children.each(function (b) {
-                    if (b.active && (b.y < 0 || b.y > 600 || b.x < 0 || b.x > 800)) {
+                    if (b.active && (b.y < 0 || b.y > 720 || b.x < 0 || b.x > 1250)) {
                         b.setActive(false);
                         b.setVisible(false);
                         b.body.enable = false;
@@ -279,8 +279,8 @@
             }
 
             spawnEnemy() {
-                let x = Phaser.Math.Between(0, 800);
-                let y = Phaser.Math.Between(0, 600);
+                let x = Phaser.Math.Between(0, 1250);
+                let y = Phaser.Math.Between(0, 720);
 
                 // Adjust spawn position if too close to the player
                 if (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 100) {
@@ -421,11 +421,11 @@
             }
 
             create() {
-                this.add.text(400, 300, 'Game Over', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
-                this.add.text(400, 400, 'Final Score: ' + this.finalScore, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
-                this.add.text(400, 450, `Time: ${this.finalTime}`, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 360, 'Game Over', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 460, 'Final Score: ' + this.finalScore, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 510, `Time: ${this.finalTime}`, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
 
-                let restartButton = this.add.text(400, 500, 'Restart', { fontSize: '32px', fill: '#FFF' })
+                let restartButton = this.add.text(625, 560, 'Restart', { fontSize: '32px', fill: '#FFF' })
                     .setOrigin(0.5)
                     .setInteractive();
                 restartButton.on('pointerdown', () => {
@@ -436,8 +436,8 @@
 
         const config = {
             type: Phaser.AUTO,
-            width: 800,
-            height: 600,
+            width: 1250,
+            height: 720,
             physics: {
                 default: 'arcade',
                 arcade: {
