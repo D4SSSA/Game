@@ -189,7 +189,7 @@
 
                 this.load.image('item', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/item.png');
                 this.load.image('life', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/life.png');
-                this.load.image('explosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/explosion.png');
+                this.load.image('enemyExplosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/enemyExplosion.png');
 
             }
 
@@ -221,14 +221,6 @@
                     defaultKey: 'enemyBullet',
                     maxSize: 20
                 });
-
-                 // Explosion Animation erstellen
-    this.anims.create({
-        key: 'explode',
-        frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 15 }),
-        frameRate: 16,
-        hideOnComplete: true
-    });
 
                 // Create enemies group
                 this.enemies = this.physics.add.group();
@@ -556,29 +548,29 @@
             }
 
             hitEnemy(bullet, enemy) {
-    if (bullet.active && enemy.active) {
-        bullet.setActive(false).setVisible(false);
-        bullet.body.enable = false;
-        enemy.setActive(false).setVisible(false);
-        enemy.body.enable = false;
+                if (bullet.active && enemy.active) {
+                    bullet.setActive(false).setVisible(false);
+                    bullet.body.enable = false;
+                    enemy.setActive(false).setVisible(false);
+                    enemy.body.enable = false;
 
-        // Punktzahl um 100 erhöhen und Text aktualisieren
-        this.score += 100;
-        this.scoreText.setText('Score: ' + this.score);
+                    // Punktzahl um 100 erhöhen und Text aktualisieren
+                    this.score += 100;
+                    this.scoreText.setText('Score: ' + this.score);
 
-        // Explosion anzeigen
-        let explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
-        explosion.play('explode');
-        
-        // Explosion nach 1 Sekunde entfernen
-        this.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                explosion.destroy();
+                    // Explosion anzeigen
+                    let explosion = this.add.image(enemy.x, enemy.y, 'enemyExplosion');
+
+                    // Explosion nach 1 Sekunde entfernen
+                    this.time.addEvent({
+                        delay: 250,
+                        callback: () => {
+                            explosion.destroy();
+                        }
+                    });
+                }
             }
-        });
-    }
-}
+
 
 
             hitEnemyBullet(playerBullet, enemyBullet) {
@@ -610,6 +602,17 @@
                         this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
                     }
                 }
+
+                // Explosion anzeigen
+                let explosion = this.add.image(player.x, player.y, 'explosion');
+
+                // Explosion nach 1 Sekunde entfernen
+                this.time.addEvent({
+                    delay: 200,
+                    callback: () => {
+                        explosion.destroy();
+                    }
+                });
             }
 
             playerHitByBullet(player, bullet) {
@@ -633,6 +636,17 @@
                         this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
                     }
                 }
+
+                // Explosion anzeigen
+                let explosion = this.add.image(player.x, player.y, 'explosion');
+
+                // Explosion nach 1 Sekunde entfernen
+                this.time.addEvent({
+                    delay: 200,
+                    callback: () => {
+                        explosion.destroy();
+                    }
+                });
             }
 
             updateSpawnDelay() {
