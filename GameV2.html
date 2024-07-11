@@ -189,6 +189,8 @@
 
                 this.load.image('item', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/item.png');
                 this.load.image('life', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/life.png');
+                this.load.image('explosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/explosion.png');
+
             }
 
             create() {
@@ -219,6 +221,14 @@
                     defaultKey: 'enemyBullet',
                     maxSize: 20
                 });
+
+                 // Explosion Animation erstellen
+    this.anims.create({
+        key: 'explode',
+        frames: this.anims.generateFrameNumbers('explosion', { start: 0, end: 15 }),
+        frameRate: 16,
+        hideOnComplete: true
+    });
 
                 // Create enemies group
                 this.enemies = this.physics.add.group();
@@ -434,7 +444,7 @@
                 } else if (enemyType === 2) {
                     enemy = this.enemies.create(x, y, 'fastEnemy_down'); // Default to down direction
                     enemy.setData('type', 'fastEnemy');
-                    enemy.setVelocity(this.enemySpeed * 2, this.enemySpeed * 2); // Double the speed for fast enemies
+                    enemy.setVelocity(this.enemySpeed * 100, this.enemySpeed * 100); // Double the speed for fast enemies
                 } else if (enemyType === 3) {
                     enemy = this.enemies.create(x, y, 'shootingEnemy_down'); // Default to down direction
                     enemy.setData('type', 'shooting');
@@ -447,6 +457,7 @@
                 enemy.setVisible(true);
                 enemy.body.enable = true;
             }
+
 
             updateEnemyDirection(enemy, angle) {
                 if (angle >= -Math.PI / 8 && angle < Math.PI / 8) {
@@ -545,17 +556,30 @@
             }
 
             hitEnemy(bullet, enemy) {
-                if (bullet.active && enemy.active) {
-                    bullet.setActive(false).setVisible(false);
-                    bullet.body.enable = false;
-                    enemy.setActive(false).setVisible(false);
-                    enemy.body.enable = false;
+    if (bullet.active && enemy.active) {
+        bullet.setActive(false).setVisible(false);
+        bullet.body.enable = false;
+        enemy.setActive(false).setVisible(false);
+        enemy.body.enable = false;
 
-                    // Punktzahl um 100 erhöhen und Text aktualisieren
-                    this.score += 100;
-                    this.scoreText.setText('Score: ' + this.score);
-                }
+        // Punktzahl um 100 erhöhen und Text aktualisieren
+        this.score += 100;
+        this.scoreText.setText('Score: ' + this.score);
+
+        // Explosion anzeigen
+        let explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
+        explosion.play('explode');
+        
+        // Explosion nach 1 Sekunde entfernen
+        this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                explosion.destroy();
             }
+        });
+    }
+}
+
 
             hitEnemyBullet(playerBullet, enemyBullet) {
                 if (playerBullet.active && enemyBullet.active) {
