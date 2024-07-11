@@ -505,7 +505,7 @@
                 } else if (enemyType === 2) {
                     enemy = this.enemies.create(x, y, 'fastEnemy_down'); // Default to down direction
                     enemy.setData('type', 'fastEnemy');
-                    enemy.setVelocity(this.enemySpeed + 100, this.enemySpeed + 100); // Double the speed for fast enemies
+                    enemy.setVelocity(this.enemySpeed * 2, this.enemySpeed * 2); // Double the speed for fast enemies
                 } else if (enemyType === 3) {
                     enemy = this.enemies.create(x, y, 'shootingEnemy_down'); // Default to down direction
                     enemy.setData('type', 'shootingEnemy');
