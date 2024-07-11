@@ -250,18 +250,6 @@
                     maxSize: 20
                 });
 
-                // Create clouds group
-                this.clouds = this.add.group();
-
-                // Event for cloud spawning
-                this.cloudSpawnEvent = this.time.addEvent({
-                    delay: 3000, // Adjust the delay for cloud spawning
-                    callback: this.spawnCloud,
-                    callbackScope: this,
-                    loop: true
-                });
-
-
                 // Create enemies group
                 this.enemies = this.physics.add.group();
 
@@ -273,6 +261,7 @@
                 const lifeYPosition = this.lifeYPosition; // Set this value to place the hearts below the score and timer
                 for (let i = 0; i < this.lives; i++) {
                     let life = this.add.image(50 + i * lifeSpacing, lifeYPosition, 'life');
+                    life.setDepth(10); // Set the depth of life sprites to be above clouds
                     this.lifeSprites.push(life);
                 }
 
@@ -286,8 +275,19 @@
 
                 // Event for item spawning
                 this.itemSpawnEvent = this.time.addEvent({
-                    delay: 60000, // 1 minute delay
+                    delay: 25000, // 1 minute delay
                     callback: this.spawnItem,
+                    callbackScope: this,
+                    loop: true
+                });
+
+                // Create clouds group
+                this.clouds = this.add.group();
+
+                // Event for cloud spawning
+                this.cloudSpawnEvent = this.time.addEvent({
+                    delay: 3000, // Adjust the delay for cloud spawning
+                    callback: this.spawnCloud,
                     callbackScope: this,
                     loop: true
                 });
@@ -301,9 +301,13 @@
 
                 // Score display
                 this.scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+                this.scoreText.setDepth(10); // Set the depth of score text to be above clouds
+
                 // Timer display
                 this.timerText = this.add.text(16, 50, 'Time: 0:00', { fontSize: '32px', fill: '#FFF' });
+                this.timerText.setDepth(10); // Set the depth of timer text to be above clouds
             }
+
 
             update(time, delta) {
                 const glideFactor = 0.95;
@@ -655,29 +659,31 @@
 
                 if (cloudType === 1) {
                     cloudImage = 'cloud1';
-                    alpha = 0.3; // Very transparent
+                    alpha = 0.3; // Sehr durchsichtig
                 } else if (cloudType === 2) {
                     cloudImage = 'cloud2';
-                    alpha = 0.6; // Medium transparent
+                    alpha = 0.6; // Mittel durchsichtig
                 } else {
                     cloudImage = 'cloud3';
-                    alpha = 1.0; // Not transparent
+                    alpha = 1.0; // Nicht durchsichtig
                 }
 
                 let x = Phaser.Math.Between(0, 1250);
-                let cloud = this.add.image(x, 720, cloudImage).setAlpha(alpha);
+                let cloud = this.add.image(x, 1250, cloudImage).setAlpha(alpha); // Spawnen außerhalb des Sichtfeldes (y = 800)
+                cloud.setDepth(1); // Set the depth of clouds to be below score, timer and life sprites
                 this.clouds.add(cloud);
 
                 this.tweens.add({
                     targets: cloud,
                     y: -cloud.height,
-                    duration: 10000,
+                    duration: 60000, // Langsame Bewegung (30 Sekunden)
                     ease: 'Linear',
                     onComplete: () => {
                         cloud.destroy();
                     }
                 });
             }
+
 
 
             hitEnemyBullet(playerBullet, enemyBullet) {
@@ -707,51 +713,21 @@
 
             playerHit(player, enemy) {
                 if (enemy.active) {
-                    this.lives -= 1;
-                    this.lifeSprites[this.lives].setVisible(false);
-
                     if (this.lives > 0) {
+                        this.lives -= 1;
+                        this.lifeSprites[this.lives].setVisible(false);
+
                         enemy.setActive(false).setVisible(false);
                         enemy.body.enable = false;
-                    } else {
-                        const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
-                        const finalMinutes = Math.floor(finalTime / 60);
-                        const finalSeconds = finalTime % 60;
-                        const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
-                        this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+
+                        // Entferne den Rotor des zerstörten Feindes
+                        let enemyRotor = enemy.getData('rotor');
+                        if (enemyRotor) {
+                            enemyRotor.destroy();
+                        }
                     }
 
-                    // Entferne den Rotor des zerstörten Feindes
-                    let enemyRotor = enemy.getData('rotor');
-                    if (enemyRotor) {
-                        enemyRotor.destroy();
-                    }
-                }
-
-                // Explosion anzeigen
-                let explosion = this.add.image(player.x, player.y, 'explosion');
-
-                // Explosion nach 1 Sekunde entfernen
-                this.time.addEvent({
-                    delay: 200,
-                    callback: () => {
-                        explosion.destroy();
-                    }
-                });
-            }
-
-
-            playerHitByBullet(player, bullet) {
-                if (bullet.active) {
-                    bullet.setActive(false).setVisible(false);
-                    bullet.body.enable = false;
-
-                    this.lives -= 1;
-                    this.lifeSprites[this.lives].setVisible(false);
-
-                    if (this.lives > 0) {
-                        // Spieler blinken lassen oder andere visuelle Rückmeldung
-                    } else {
+                    if (this.lives <= 0) {
                         const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
                         const finalMinutes = Math.floor(finalTime / 60);
                         const finalSeconds = finalTime % 60;
@@ -771,6 +747,38 @@
                     });
                 }
             }
+
+            playerHitByBullet(player, bullet) {
+                if (bullet.active) {
+                    bullet.setActive(false).setVisible(false);
+                    bullet.body.enable = false;
+
+                    if (this.lives > 0) {
+                        this.lives -= 1;
+                        this.lifeSprites[this.lives].setVisible(false);
+                    }
+
+                    if (this.lives <= 0) {
+                        const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
+                        const finalMinutes = Math.floor(finalTime / 60);
+                        const finalSeconds = finalTime % 60;
+                        const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+                        this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                    }
+
+                    // Explosion anzeigen
+                    let explosion = this.add.image(player.x, player.y, 'explosion');
+
+                    // Explosion nach 1 Sekunde entfernen
+                    this.time.addEvent({
+                        delay: 200,
+                        callback: () => {
+                            explosion.destroy();
+                        }
+                    });
+                }
+            }
+
 
 
             updateSpawnDelay() {
@@ -794,6 +802,8 @@
                 }
             }
         }
+
+        
 
         class GameOverScene extends Phaser.Scene {
             constructor() {
