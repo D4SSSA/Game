@@ -190,12 +190,28 @@
                 this.load.image('item', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/item.png');
                 this.load.image('life', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/life.png');
 
-                this.load.image('Explosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/explosion.png');
+                this.load.image('explosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/explosion.png');
                 this.load.image('enemyExplosion', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/enemyExplosion.png');
 
+                this.load.spritesheet('rotor', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/rotor.png', { frameWidth: 50, frameHeight: 50 });
             }
 
             create() {
+
+                // Rotor Animation erstellen
+                this.anims.create({
+                    key: 'rotorAnim',
+                    frames: this.anims.generateFrameNumbers('rotor', { start: 0, end: 3 }),
+                    frameRate: 24,
+                    repeat: -1
+                });
+
+                let playerRotor = this.add.sprite(player.x, player.y, 'rotor');
+                rotor.play('rotorAnim');
+
+                let enemyRotor = this.add.sprite(enemy.x, enemy.y, 'rotor');
+    rotor.play('rotorAnim');
+    
                 // Setze die Startzeit und den Score zurück
                 this.startTime = this.time.now;
                 this.score = 0;
@@ -353,7 +369,7 @@
                 this.enemies.children.iterate(function (enemy) {
                     if (enemy.active) {
                         this.physics.moveToObject(enemy, this.player, this.enemySpeed);
-                        if (enemy.getData('type') === 'shooting' && time > enemy.getData('lastFired') + 2000) {
+                        if (enemy.getData('type') === 'shootingEnemy' && time > enemy.getData('lastFired') + 2000) {
                             enemy.setData('lastFired', time);
                             this.shootFromEnemy(enemy);
                         }
@@ -438,10 +454,10 @@
                 } else if (enemyType === 2) {
                     enemy = this.enemies.create(x, y, 'fastEnemy_down'); // Default to down direction
                     enemy.setData('type', 'fastEnemy');
-                    enemy.setVelocity(this.enemySpeed * 100, this.enemySpeed * 100); // Double the speed for fast enemies
+                    enemy.setVelocity(this.enemySpeed + 100, this.enemySpeed + 100); // Double the speed for fast enemies
                 } else if (enemyType === 3) {
                     enemy = this.enemies.create(x, y, 'shootingEnemy_down'); // Default to down direction
-                    enemy.setData('type', 'shooting');
+                    enemy.setData('type', 'shootingEnemy');
                     enemy.setData('lastFired', this.time.now); // Set initial last fired to now
                     enemy.setVelocity(this.enemySpeed, this.enemySpeed);
                 }
@@ -561,13 +577,13 @@
                     this.scoreText.setText('Score: ' + this.score);
 
                     // Explosion anzeigen
-                    let explosion = this.add.image(enemy.x, enemy.y, 'enemyExplosion');
+                    let enemyExplosion = this.add.image(enemy.x, enemy.y, 'enemyExplosion');
 
                     // Explosion nach 1 Sekunde entfernen
                     this.time.addEvent({
                         delay: 250,
                         callback: () => {
-                            explosion.destroy();
+                            enemyExplosion.destroy();
                         }
                     });
                 }
