@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
-    <title>Spiel</title>
+    <title>Helikopter und Raketen</title>
 </head>
 
 <body>
@@ -17,7 +17,7 @@
 
             create() {
                 // Titel des Spiels
-                this.add.text(625, 360, 'Spiel', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
+                this.add.text(625, 360, 'Helikopter und Raketen', { fontSize: '64px', fill: '#FFF' }).setOrigin(0.5);
 
                 // Start-Button
                 let startButton = this.add.text(625, 460, 'Start', { fontSize: '32px', fill: '#FFF' })
@@ -822,7 +822,7 @@
                 this.add.text(625, 460, 'Final Score: ' + this.finalScore, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
                 this.add.text(625, 510, `Time: ${this.finalTime}`, { fontSize: '32px', fill: '#FFF' }).setOrigin(0.5);
 
-                let restartButton = this.add.text(625, 560, 'Restart', { fontSize: '32px', fill: '#FFF' })
+                let restartButton = this.add.text(625, 560, 'Neustart', { fontSize: '32px', fill: '#FFF' })
                     .setOrigin(0.5)
                     .setInteractive();
                 restartButton.on('pointerdown', () => {
