@@ -199,6 +199,11 @@
                 this.load.image('background1', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background1.png');
                 this.load.image('background2', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background2.png');
                 this.load.image('background3', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background3.png');
+
+                this.load.image('cloud1', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/cloud.png');
+                this.load.image('cloud2', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/cloud.png');
+                this.load.image('cloud3', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/cloud.png');
+
             }
 
             create() {
@@ -244,6 +249,18 @@
                     defaultKey: 'enemyBullet',
                     maxSize: 20
                 });
+
+                // Create clouds group
+                this.clouds = this.add.group();
+
+                // Event for cloud spawning
+                this.cloudSpawnEvent = this.time.addEvent({
+                    delay: 3000, // Adjust the delay for cloud spawning
+                    callback: this.spawnCloud,
+                    callbackScope: this,
+                    loop: true
+                });
+
 
                 // Create enemies group
                 this.enemies = this.physics.add.group();
@@ -319,6 +336,16 @@
                     }
                     this.player.setVelocityY(this.glideVelocity.y);
                 }
+
+                this.clouds.children.iterate(function (cloud) {
+                    cloud.setDepth(1);
+                }, this);
+
+                this.player.setDepth(0);
+                this.enemies.children.iterate(function (enemy) {
+                    enemy.setDepth(0);
+                }, this);
+
 
                 // Update player direction
                 if (this.cursors.left.isDown && this.cursors.up.isDown) {
@@ -620,6 +647,38 @@
                     }
                 }
             }
+
+            spawnCloud() {
+                let cloudType = Phaser.Math.Between(1, 3);
+                let cloudImage;
+                let alpha;
+
+                if (cloudType === 1) {
+                    cloudImage = 'cloud1';
+                    alpha = 0.3; // Very transparent
+                } else if (cloudType === 2) {
+                    cloudImage = 'cloud2';
+                    alpha = 0.6; // Medium transparent
+                } else {
+                    cloudImage = 'cloud3';
+                    alpha = 1.0; // Not transparent
+                }
+
+                let x = Phaser.Math.Between(0, 1250);
+                let cloud = this.add.image(x, 720, cloudImage).setAlpha(alpha);
+                this.clouds.add(cloud);
+
+                this.tweens.add({
+                    targets: cloud,
+                    y: -cloud.height,
+                    duration: 10000,
+                    ease: 'Linear',
+                    onComplete: () => {
+                        cloud.destroy();
+                    }
+                });
+            }
+
 
             hitEnemyBullet(playerBullet, enemyBullet) {
                 if (playerBullet.active && enemyBullet.active) {
