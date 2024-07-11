@@ -123,6 +123,8 @@
                 this.lives = 3; // Initial lives
                 this.lifeSprites = []; // Array to store life sprites
                 this.glideVelocity = { x: 0, y: 0 }; // Player glide velocity
+                this.lifeSpacing = 50;
+                this.lifeYPosition = 100;
             }
 
             preload() {
@@ -130,6 +132,7 @@
                 this.load.image('background1', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background1.png');
                 this.load.image('background2', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background2.png');
                 this.load.image('background3', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/background3.png');
+
                 this.load.image('player_up', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/player_up.png');
                 this.load.image('player_down', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/player_down.png');
                 this.load.image('player_left', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/player_left.png');
@@ -192,6 +195,7 @@
                 // Setze die Startzeit und den Score zurück
                 this.startTime = this.time.now;
                 this.score = 0;
+                this.lives = 3;
 
                 // Setze den Hintergrund
                 let selectedBackground = localStorage.getItem('selectedBackground') || 'background1';
@@ -223,8 +227,10 @@
                 this.items = this.physics.add.group();
 
                 // Create life sprites
+                const lifeSpacing = this.lifeSpacing; // Increase this value for more space between hearts
+                const lifeYPosition = this.lifeYPosition; // Set this value to place the hearts below the score and timer
                 for (let i = 0; i < this.lives; i++) {
-                    let life = this.add.image(50 + i * 30, 50, 'life');
+                    let life = this.add.image(50 + i * lifeSpacing, lifeYPosition, 'life');
                     this.lifeSprites.push(life);
                 }
 
@@ -258,55 +264,62 @@
             }
 
             update(time, delta) {
-                this.player.setVelocity(0);
+                const glideFactor = 0.95;
+                const glideThreshold = 1;
 
-                // Update player movement and direction
-                if (this.cursors.left.isDown && this.cursors.up.isDown) {
+                if (this.cursors.left.isDown) {
                     this.player.setVelocityX(-200);
+                    this.glideVelocity.x = -200;
+                } else if (this.cursors.right.isDown) {
+                    this.player.setVelocityX(200);
+                    this.glideVelocity.x = 200;
+                } else {
+                    this.glideVelocity.x *= glideFactor;
+                    if (Math.abs(this.glideVelocity.x) < glideThreshold) {
+                        this.glideVelocity.x = 0;
+                    }
+                    this.player.setVelocityX(this.glideVelocity.x);
+                }
+
+                if (this.cursors.up.isDown) {
                     this.player.setVelocityY(-200);
+                    this.glideVelocity.y = -200;
+                } else if (this.cursors.down.isDown) {
+                    this.player.setVelocityY(200);
+                    this.glideVelocity.y = 200;
+                } else {
+                    this.glideVelocity.y *= glideFactor;
+                    if (Math.abs(this.glideVelocity.y) < glideThreshold) {
+                        this.glideVelocity.y = 0;
+                    }
+                    this.player.setVelocityY(this.glideVelocity.y);
+                }
+
+                // Update player direction
+                if (this.cursors.left.isDown && this.cursors.up.isDown) {
                     this.lastDirection = 'up_left';
                     this.player.setTexture('player_up_left');
                 } else if (this.cursors.left.isDown && this.cursors.down.isDown) {
-                    this.player.setVelocityX(-200);
-                    this.player.setVelocityY(200);
                     this.lastDirection = 'down_left';
                     this.player.setTexture('player_down_left');
                 } else if (this.cursors.right.isDown && this.cursors.up.isDown) {
-                    this.player.setVelocityX(200);
-                    this.player.setVelocityY(-200);
                     this.lastDirection = 'up_right';
                     this.player.setTexture('player_up_right');
                 } else if (this.cursors.right.isDown && this.cursors.down.isDown) {
-                    this.player.setVelocityX(200);
-                    this.player.setVelocityY(200);
                     this.lastDirection = 'down_right';
                     this.player.setTexture('player_down_right');
                 } else if (this.cursors.left.isDown) {
-                    this.player.setVelocityX(-200);
                     this.lastDirection = 'left';
                     this.player.setTexture('player_left');
                 } else if (this.cursors.right.isDown) {
-                    this.player.setVelocityX(200);
                     this.lastDirection = 'right';
                     this.player.setTexture('player_right');
                 } else if (this.cursors.up.isDown) {
-                    this.player.setVelocityY(-200);
                     this.lastDirection = 'up';
                     this.player.setTexture('player_up');
                 } else if (this.cursors.down.isDown) {
-                    this.player.setVelocityY(200);
                     this.lastDirection = 'down';
                     this.player.setTexture('player_down');
-                }
-
-                // Apply glide effect
-                if (this.glideVelocity.x !== 0 || this.glideVelocity.y !== 0) {
-                    this.player.setVelocity(this.glideVelocity.x, this.glideVelocity.y);
-                    this.glideVelocity.x *= 0.95;
-                    this.glideVelocity.y *= 0.95;
-
-                    if (Math.abs(this.glideVelocity.x) < 1) this.glideVelocity.x = 0;
-                    if (Math.abs(this.glideVelocity.y) < 1) this.glideVelocity.y = 0;
                 }
 
                 // Handle shooting with delay
@@ -662,4 +675,5 @@
         const game = new Phaser.Game(config);
     </script>
 </body>
+
 </html>
