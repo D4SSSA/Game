@@ -120,6 +120,9 @@
                 this.enemySpawnEvent = null;
                 this.itemSpawnEvent = null;
                 this.items = null;
+                this.lives = 3; // Initial lives
+                this.lifeSprites = []; // Array to store life sprites
+                this.glideVelocity = { x: 0, y: 0 }; // Player glide velocity
             }
 
             preload() {
@@ -182,6 +185,7 @@
                 this.load.image('enemyBullet_down_right', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/enemyBullet_down_right.png');
 
                 this.load.image('item', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/item.png');
+                this.load.image('life', 'https://raw.githubusercontent.com/D4SSSA/Game/main/assets/life.png');
             }
 
             create() {
@@ -217,6 +221,12 @@
 
                 // Create items group
                 this.items = this.physics.add.group();
+
+                // Create life sprites
+                for (let i = 0; i < this.lives; i++) {
+                    let life = this.add.image(50 + i * 30, 50, 'life');
+                    this.lifeSprites.push(life);
+                }
 
                 // Event for enemy spawning
                 this.enemySpawnEvent = this.time.addEvent({
@@ -287,6 +297,16 @@
                     this.player.setVelocityY(200);
                     this.lastDirection = 'down';
                     this.player.setTexture('player_down');
+                }
+
+                // Apply glide effect
+                if (this.glideVelocity.x !== 0 || this.glideVelocity.y !== 0) {
+                    this.player.setVelocity(this.glideVelocity.x, this.glideVelocity.y);
+                    this.glideVelocity.x *= 0.95;
+                    this.glideVelocity.y *= 0.95;
+
+                    if (Math.abs(this.glideVelocity.x) < 1) this.glideVelocity.x = 0;
+                    if (Math.abs(this.glideVelocity.y) < 1) this.glideVelocity.y = 0;
                 }
 
                 // Handle shooting with delay
@@ -539,11 +559,19 @@
 
             playerHit(player, enemy) {
                 if (enemy.active) { // Überprüfen, ob der Feind aktiv ist
-                    const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
-                    const finalMinutes = Math.floor(finalTime / 60);
-                    const finalSeconds = finalTime % 60;
-                    const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
-                    this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                    this.lives -= 1;
+                    this.lifeSprites[this.lives].setVisible(false);
+
+                    if (this.lives > 0) {
+                        enemy.setActive(false).setVisible(false);
+                        enemy.body.enable = false;
+                    } else {
+                        const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
+                        const finalMinutes = Math.floor(finalTime / 60);
+                        const finalSeconds = finalTime % 60;
+                        const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+                        this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                    }
                 }
             }
 
@@ -552,14 +580,21 @@
                     bullet.setActive(false).setVisible(false);  // Deaktiviere das Geschoss
                     bullet.body.enable = false;
 
-                    // Berechne die finale Zeit und formatiere sie
-                    const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
-                    const finalMinutes = Math.floor(finalTime / 60);
-                    const finalSeconds = finalTime % 60;
-                    const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+                    this.lives -= 1;
+                    this.lifeSprites[this.lives].setVisible(false);
 
-                    // Starte die GameOverScene mit den korrekten Daten
-                    this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                    if (this.lives > 0) {
+                        // Spieler blinken lassen oder andere visuelle Rückmeldung
+                    } else {
+                        // Berechne die finale Zeit und formatiere sie
+                        const finalTime = Math.floor((this.time.now - this.startTime) / 1000);
+                        const finalMinutes = Math.floor(finalTime / 60);
+                        const finalSeconds = finalTime % 60;
+                        const formattedFinalTime = `${finalMinutes}:${finalSeconds.toString().padStart(2, '0')}`;
+
+                        // Starte die GameOverScene mit den korrekten Daten
+                        this.scene.start('GameOverScene', { score: this.score, time: formattedFinalTime });
+                    }
                 }
             }
 
